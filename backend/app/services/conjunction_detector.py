@@ -25,31 +25,20 @@ REPLACEMENTS = {
     "不过": "但",
     "因此": "所以",
     "因而": "所以",
+    "故而": "所以",
     "与": "和",
 }
 
-DELETIONS = [
-    "从而",
-    "以致",
-    "而且",
-    "况且",
-    "何况",
-    "加之",
-    "以及",
-    "并",
-    "及",
-]
-
-CONDITIONAL_PAIRS = [
-    ("只要", "就"),
-    ("如果", "那么"),
-    ("一旦", "便"),
+SAFE_PREFIX_DELETIONS = [
+    "不可否认的是",
+    "值得注意的是",
+    "需要指出的是",
 ]
 
 TOKEN_PATTERN = re.compile(
     "|".join(
         re.escape(word)
-        for word in sorted([*REPLACEMENTS.keys(), *DELETIONS], key=len, reverse=True)
+        for word in sorted([*REPLACEMENTS.keys(), *SAFE_PREFIX_DELETIONS], key=len, reverse=True)
     )
 )
 
@@ -63,54 +52,34 @@ class ConjunctionHit:
     replacement: str
 
 
-def _find_condition_pair_hits(text: str) -> list[ConjunctionHit]:
-    hits: list[ConjunctionHit] = []
+def _without_overlaps(hits: list[ConjunctionHit]) -> list[ConjunctionHit]:
+    selected: list[ConjunctionHit] = []
+    occupied: list[range] = []
 
-    for first, second in CONDITIONAL_PAIRS:
-        start = 0
-        while True:
-            first_index = text.find(first, start)
-            if first_index < 0:
-                break
+    for hit in sorted(hits, key=lambda item: (item.start, -(item.end - item.start), not item.replacement)):
+        if any(hit.start < item.stop and hit.end > item.start for item in occupied):
+            continue
+        selected.append(hit)
+        occupied.append(range(hit.start, hit.end))
 
-            second_index = text.find(second, first_index + len(first))
-            if second_index >= 0 and second_index - first_index <= 40:
-                hits.append(
-                    ConjunctionHit(
-                        rule=CONJUNCTION_RULE,
-                        start=first_index,
-                        end=first_index + len(first),
-                        text=first,
-                        replacement="",
-                    )
-                )
-                hits.append(
-                    ConjunctionHit(
-                        rule=CONJUNCTION_RULE,
-                        start=second_index,
-                        end=second_index + len(second),
-                        text=second,
-                        replacement="",
-                    )
-                )
-                start = second_index + len(second)
-                continue
-
-            start = first_index + len(first)
-
-    return hits
+    return sorted(selected, key=lambda item: item.start)
 
 
 def detect_logical_conjunctions(text: str) -> list[ConjunctionHit]:
-    hits = [
-        ConjunctionHit(
-            rule=CONJUNCTION_RULE,
-            start=item.start(),
-            end=item.end(),
-            text=item.group(0),
-            replacement=REPLACEMENTS.get(item.group(0), ""),
+    hits: list[ConjunctionHit] = []
+    for item in TOKEN_PATTERN.finditer(text):
+        word = item.group(0)
+        if word in SAFE_PREFIX_DELETIONS and text[: item.start()].strip(" ，,。！？!?；;：:"):
+            continue
+
+        hits.append(
+            ConjunctionHit(
+                rule=CONJUNCTION_RULE,
+                start=item.start(),
+                end=item.end(),
+                text=word,
+                replacement=REPLACEMENTS.get(word, ""),
+            )
         )
-        for item in TOKEN_PATTERN.finditer(text)
-    ]
-    hits.extend(_find_condition_pair_hits(text))
-    return sorted(hits, key=lambda item: item.start)
+
+    return _without_overlaps(hits)

@@ -13,7 +13,7 @@
 | `delete_pos_adverb` | POS 词性规则 | delete | 使用 `jieba.posseg` 识别副词并删除；否定词本身保留，否定后的程度副词删除，例如 `不太对` 改为 `不对` |
 | `delete_attributive_adjective` | POS 词性规则 | delete | 使用 `jieba.posseg` 识别形容词定语并随机删除一部分；只处理 `形容词 + 的`，不删除谓语形容词 |
 | `delete_reveal_word` | 语义词表规则 | delete | 删除揭示词和揭示短语，例如 `原来`、`竟然`、`没想到`、`他突然意识到`，避免提前点破转折或真相 |
-| `edit_logical_conjunction` | 语义词表规则 | replace/delete | 替换或删除显性逻辑连接词，例如 `然而` 改为 `但`、`因此` 改为 `所以`，删除 `而且`、`以及`、`只要……就` 中的连接成分 |
+| `edit_logical_conjunction` | 语义词表规则 | replace/delete | 保守处理显性逻辑连接词，只做高确定性替换和安全段首空壳短语删除；拿不准会改变含义的连接词不删，例如不删除 `因为……所以`、`不仅……而且`、`只要……就` |
 
 ---
 
