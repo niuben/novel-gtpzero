@@ -27,12 +27,16 @@ REPLACEMENTS = {
     "因而": "所以",
     "故而": "所以",
     "与": "和",
+    "和": "、"
 }
 
 SAFE_PREFIX_DELETIONS = [
     "不可否认的是",
     "值得注意的是",
     "需要指出的是",
+    "但",
+    "因为",
+    "所以",
 ]
 
 TOKEN_PATTERN = re.compile(
