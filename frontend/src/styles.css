@@ -109,6 +109,65 @@ h2 {
   margin-top: 18px;
 }
 
+.rule-panel {
+  margin-top: 18px;
+}
+
+.rule-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.rule-panel-head p {
+  margin: 0;
+  color: #6a6259;
+}
+
+.rule-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.rule-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid #e4d8c9;
+  border-radius: 16px;
+  background: #fffdf8;
+  cursor: pointer;
+}
+
+.rule-option input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: #1f4f46;
+}
+
+.rule-option strong,
+.rule-option small {
+  display: block;
+}
+
+.rule-option strong {
+  margin-bottom: 4px;
+  color: #1f4f46;
+  font-size: 14px;
+}
+
+.rule-option small {
+  color: #6a6259;
+  line-height: 1.45;
+}
+
 .panel {
   padding: 22px;
   border-radius: 24px;
@@ -126,6 +185,11 @@ h2 {
   border-radius: 16px;
   color: #7b5036;
   background: #f7e3cf;
+}
+
+.empty.compact {
+  margin-top: 16px;
+  padding: 12px;
 }
 
 .error {
@@ -241,12 +305,14 @@ label {
 
 @media (max-width: 900px) {
   .hero,
+  .rule-panel-head,
   .workspace,
   .compare-grid {
     grid-template-columns: 1fr;
   }
 
-  .hero {
+  .hero,
+  .rule-panel-head {
     display: grid;
   }
 }

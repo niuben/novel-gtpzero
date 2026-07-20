@@ -1,8 +1,19 @@
 # Rules
 
+当前规则集从零开始逐条验证：有效果的规则保留入库，没有效果的规则删除。
+
 每一类规则是一个独立 JSON 文件，直接放在当前 `rules/` 目录下。文件名就是分类名，例如 `filler.json` 的分类是 `filler`。
 
-本规则集特别针对**悬疑小说**场景进行了扩充，每条规则都包含了 `novel_context` 字段，说明该规则在悬疑写作中的具体意义。
+---
+
+## 当前已加载规则
+
+| rule_id | 类型 | 行为 | 说明 |
+|---------|------|------|------|
+| `delete_pos_adverb` | POS 词性规则 | delete | 使用 `jieba.posseg` 识别副词并删除；否定词本身保留，否定后的程度副词删除，例如 `不太对` 改为 `不对` |
+| `delete_attributive_adjective` | POS 词性规则 | delete | 使用 `jieba.posseg` 识别形容词定语并随机删除一部分；只处理 `形容词 + 的`，不删除谓语形容词 |
+| `delete_reveal_word` | 语义词表规则 | delete | 删除揭示词和揭示短语，例如 `原来`、`竟然`、`没想到`、`他突然意识到`，避免提前点破转折或真相 |
+| `edit_logical_conjunction` | 语义词表规则 | replace/delete | 替换或删除显性逻辑连接词，例如 `然而` 改为 `但`、`因此` 改为 `所以`，删除 `而且`、`以及`、`只要……就` 中的连接成分 |
 
 ---
 
@@ -75,43 +86,6 @@
 
 ---
 
-## 规则文件清单
-
-| 文件名 | 类别 | 类型 | 风险 |
-|--------|------|------|------|
-| `rule_of_three.json` | 三段式列举 | suggest/regex | high |
-| `filler.json` | 填充短语 | delete | high |
-| `wordy_expression.json` | 绕圈表达 | replace | — |
-| `weak_verb.json` | 弱动词结构 | replace | — |
-| `vague_subject.json` | 模糊主语 | suggest | high |
-| `vague_authority.json` | 模糊权威 | suggest | high |
-| `template_opening.json` | 模板化开头 | delete/regex | high |
-| `surface_analysis.json` | 表面分析 | suggest/regex | high |
-| `promo_language.json` | 宣传语言 | suggest | — |
-| `parallel_structure.json` | 平行结构 | suggest/regex | medium |
-| `negative_parallel.json` | 否定式排比 | suggest/regex | medium |
-| `fake_range.json` | 假范围 | suggest/regex | medium |
-| `empty_ending.json` | 空洞结尾 | suggest | high |
-| `chat_artifact.json` | 聊天痕迹 | delete | high |
-| `ai_vocabulary.json` | AI高频词汇 | suggest | high |
-| `ai_disclaimer.json` | AI免责声明 | suggest | high |
-| `abstract_expression.json` | 抽象表达 | suggest | — |
-| `absolute_tone.json` | 绝对语气 | suggest | — |
-
----
-
-## 悬疑小说写作核心原则
-
-1. **具体胜于抽象**：能用感官（视觉、听觉、触觉、嗅觉）描写的，不用概念词
-2. **动词胜于形容词**：让动作说话，不要用形容词替读者感受
-3. **断裂胜于工整**：不对称的节奏比整齐的排比更有紧张感
-4. **沉默胜于解释**：不要替读者分析"这意味着什么"
-5. **不确定胜于确定**：悬疑的核心是张力，绝对语气会毁掉张力
-
----
-
 ## 扩展指南
 
 新增同类规则时，直接追加到对应文件的 `items` 里。如果是全新的规则类别，新建 JSON 文件并遵循上述格式。
-
-对于悬疑小说的规则扩展，建议同时补充 `novel_context` 字段，说明该规则在悬疑场景下的具体考量。

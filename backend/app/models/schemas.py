@@ -3,6 +3,15 @@ from pydantic import BaseModel, Field
 
 class ProcessRequest(BaseModel):
     text: str = Field(..., min_length=1)
+    enabled_rule_ids: list[str] | None = None
+
+
+class RuleOption(BaseModel):
+    rule_id: str
+    name: str
+    description: str
+    action: str
+    risk: str
 
 
 class Change(BaseModel):

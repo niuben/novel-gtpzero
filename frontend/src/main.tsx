@@ -34,6 +34,14 @@ type ProcessResponse = {
   final_text: string
 }
 
+type RuleOption = {
+  rule_id: string
+  name: string
+  description: string
+  action: string
+  risk: string
+}
+
 const sampleText = [
   '随着人工智能技术的不断发展，越来越多的企业开始关注内容生产效率的提升。',
   '值得注意的是，AI 工具可以为企业提供帮助。',
@@ -43,10 +51,31 @@ const sampleText = [
 function App() {
   const [input, setInput] = React.useState(sampleText)
   const [lines, setLines] = React.useState<LineResult[]>([])
+  const [rules, setRules] = React.useState<RuleOption[]>([])
+  const [enabledRuleIds, setEnabledRuleIds] = React.useState<string[]>([])
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
 
   const finalText = lines.map((line) => line.final_text).join('\n')
+  const allRulesEnabled = rules.length > 0 && enabledRuleIds.length === rules.length
+
+  React.useEffect(() => {
+    async function loadRules() {
+      try {
+        const response = await fetch('http://localhost:8000/api/rules')
+        if (!response.ok) {
+          throw new Error(`规则加载失败：${response.status}`)
+        }
+        const data = (await response.json()) as RuleOption[]
+        setRules(data)
+        setEnabledRuleIds(data.map((rule) => rule.rule_id))
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '规则加载失败')
+      }
+    }
+
+    loadRules()
+  }, [])
 
   async function processArticle() {
     setLoading(true)
@@ -55,7 +84,7 @@ function App() {
       const response = await fetch('http://localhost:8000/api/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: input }),
+        body: JSON.stringify({ text: input, enabled_rule_ids: enabledRuleIds }),
       })
       if (!response.ok) {
         throw new Error(`请求失败：${response.status}`)
@@ -109,6 +138,16 @@ function App() {
     )
   }
 
+  function toggleRule(ruleId: string) {
+    setEnabledRuleIds((current) =>
+      current.includes(ruleId) ? current.filter((item) => item !== ruleId) : [...current, ruleId],
+    )
+  }
+
+  function toggleAllRules() {
+    setEnabledRuleIds(allRulesEnabled ? [] : rules.map((rule) => rule.rule_id))
+  }
+
   return (
     <main className="page">
       <section className="hero">
@@ -125,6 +164,38 @@ function App() {
       </section>
 
       {error && <div className="error">{error}</div>}
+
+      <section className="panel rule-panel">
+        <div className="rule-panel-head">
+          <div>
+            <h2>规则选择</h2>
+            <p>当前启用 {enabledRuleIds.length} / {rules.length} 条规则。可以全部启用，也可以只跑单个规则验证效果。</p>
+          </div>
+          <button className="secondary" onClick={toggleAllRules} disabled={!rules.length}>
+            {allRulesEnabled ? '全部取消' : '全部选择'}
+          </button>
+        </div>
+
+        {!rules.length ? (
+          <div className="empty compact">暂无可选规则。</div>
+        ) : (
+          <div className="rule-list">
+            {rules.map((rule) => (
+              <label className="rule-option" key={rule.rule_id}>
+                <input
+                  type="checkbox"
+                  checked={enabledRuleIds.includes(rule.rule_id)}
+                  onChange={() => toggleRule(rule.rule_id)}
+                />
+                <span>
+                  <strong>{rule.rule_id}</strong>
+                  <small>{rule.description}</small>
+                </span>
+              </label>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="workspace">
         <div className="panel input-panel">
@@ -157,8 +228,8 @@ function App() {
 
                   {!!line.changes.length && (
                     <div className="meta-list">
-                      {line.changes.map((change) => (
-                        <span key={`${line.line_id}-${change.rule_id}`}>
+                      {line.changes.map((change, index) => (
+                        <span key={`${line.line_id}-${change.rule_id}-${index}`}>
                           {change.reason}：{change.before}{change.after ? ` → ${change.after}` : ''}
                         </span>
                       ))}

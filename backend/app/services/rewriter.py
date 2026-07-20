@@ -28,9 +28,11 @@ def _apply_match(text: str, match: Match) -> tuple[str, Change | None]:
             reason=rule.reason,
         )
 
-    if rule.action == "replace" and rule.replacement is not None:
-        replacement = rule.replacement
-        if rule.pattern_type == "regex":
+    if rule.action == "replace" and (rule.replacement is not None or match.replacement is not None):
+        replacement = match.replacement if match.replacement is not None else rule.replacement
+        if replacement is None:
+            return text, None
+        if rule.pattern_type == "regex" and match.replacement is None:
             replacement = re.sub(rule.match, rule.replacement, match.text, count=1)
         rewritten = text[: match.start] + replacement + text[match.end :]
         return rewritten, Change(
@@ -58,8 +60,8 @@ def _without_overlaps(matches: list[Match]) -> list[Match]:
     return selected
 
 
-def rewrite_line(line: ParsedLine) -> LineResult:
-    matches = detect_matches(line.text)
+def rewrite_line(line: ParsedLine, enabled_rule_ids: set[str] | None = None) -> LineResult:
+    matches = detect_matches(line.text, enabled_rule_ids)
     auto_matches = _without_overlaps([item for item in matches if item.rule.auto_apply and item.rule.risk == "low"])
     tips = [
         Tip(rule_id=item.rule.id, match=item.text, message=item.rule.reason, risk=item.rule.risk)
