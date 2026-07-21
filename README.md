@@ -19,6 +19,27 @@ GET  /health
 POST /api/process
 ```
 
+### CLI
+
+无需启动服务，AI 或脚本可以直接调用命令行工具：
+
+```bash
+cd backend
+python -m app.cli --list-rules
+python -m app.cli --text "然而他突然握住冰冷的手。"
+python -m app.cli --text "然而他突然握住冰冷的手。" --format json
+python -m app.cli --rules edit_logical_conjunction --text "然而他没有回头，因此没人看见他的脸。"
+python -m app.cli --input article.txt --output cleaned.txt
+```
+
+`--rules` 支持：
+
+```text
+all   默认，启用全部规则
+none  不启用任何规则
+rule_id,rule_id  只启用指定规则
+```
+
 ## Frontend
 
 ```bash
